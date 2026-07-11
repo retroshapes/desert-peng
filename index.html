@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="player.css?v=20260711-2" />
+  <link rel="stylesheet" href="player.css?v=20260711-3" />
   <style>
     :root {
       --gb-shell: oklch(0.55 0.19 305);
@@ -60,7 +60,7 @@
 
     .device {
       position: relative;
-      width: min(100vw, calc(100dvh * 9 / 16), 420px);
+      width: min(94vw, calc(94dvh * 9 / 16), 420px);
       aspect-ratio: 9 / 16;
       margin: auto;
     }
@@ -349,10 +349,26 @@
       box-shadow: inset 0 2px 0 rgba(255,255,255,0.12), 0 3px 0 rgba(0,0,0,0.35);
       transition: transform 55ms ease, box-shadow 55ms ease;
     }
+    .system-buttons .menu-key {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(#f4f4f4, #a7a7aa);
+      color: #5f574f;
+      font: 14px/1 sans-serif;
+      box-shadow: inset 0 2px 0 #fff, inset 0 -3px 0 rgba(0,0,0,0.25), 0 4px 0 rgba(0,0,0,0.35);
+      transition: transform 55ms ease, box-shadow 55ms ease;
+    }
     .system-buttons button:active .pill,
     .system-buttons button.is-pressed .pill {
       transform: translateY(3px);
       box-shadow: inset 0 2px 3px rgba(0,0,0,0.48), 0 0 0 rgba(0,0,0,0);
+    }
+    .system-buttons .menu-trigger:active .menu-key {
+      transform: translateY(3px);
+      box-shadow: inset 0 3px 4px rgba(0,0,0,0.35), 0 1px 0 rgba(0,0,0,0.35);
     }
     .system-buttons span.label { font-size: 7px; }
 
@@ -374,6 +390,81 @@
     @media (max-height: 700px) {
       .device { width: min(94vw, calc(94dvh * 9 / 16), 360px); }
       .ab button, .dpad button { font-size: 14px; }
+    }
+
+    @media (max-width: 600px) and (orientation: portrait) {
+      main {
+        min-height: 100dvh;
+        background: var(--gb-shell);
+      }
+      .device {
+        width: 100vw;
+        height: 100dvh;
+        aspect-ratio: auto;
+        margin: 0;
+      }
+      .device::before {
+        border-radius: 0 0 22vw 0;
+        box-shadow: inset 0 4px 0 rgba(255,255,255,0.18), inset 0 -6px 0 rgba(0,0,0,0.22);
+      }
+      .content {
+        padding: max(12px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom));
+      }
+      .topbar {
+        min-height: 22px;
+        padding: 0 4% 5px;
+        font-size: clamp(8px, 2.35vw, 10px);
+      }
+      .bezel-wrap {
+        margin: 0;
+      }
+      .bezel {
+        padding: 10px 10px 7px;
+        border-radius: 24px;
+      }
+      .screen-label {
+        margin-top: 5px;
+        font-size: clamp(5px, 1.65vw, 7px);
+      }
+      .controls {
+        flex: 1;
+        min-height: 230px;
+        margin-top: 12px;
+        padding: 0 5%;
+        gap: 9%;
+        align-items: center;
+      }
+      .dpad,
+      .ab {
+        width: min(41vw, 190px);
+        max-width: none;
+      }
+      .system-buttons {
+        width: 74%;
+        min-height: 54px;
+        margin-top: auto;
+        padding: 0 2%;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+      }
+      .system-buttons button {
+        justify-self: center;
+      }
+      .system-buttons span.label {
+        font-size: 6px;
+      }
+      .speaker {
+        position: absolute;
+        right: 18px;
+        bottom: max(20px, env(safe-area-inset-bottom));
+        margin: 0;
+        padding: 0;
+      }
+      .speaker-grille {
+        width: 72px;
+        height: 26px;
+      }
     }
   </style>
 </head>
@@ -408,11 +499,11 @@
                     <label for="playerName">YOUR NAME</label>
                     <input id="playerName" name="playerName" maxlength="16" autocomplete="nickname" />
                     <div class="modal-actions">
-                      <button type="button" data-close-modal>B / CLOSE</button>
-                      <button type="submit" class="primary">A / SAVE</button>
+                      <button type="button" data-close-modal>A / CLOSE</button>
+                      <button type="submit" class="primary">B / SAVE</button>
                     </div>
                   </form>
-                  <p class="modal-status" id="submitStatus">A: SAVE B: CLOSE</p>
+                  <p class="modal-status" id="submitStatus">B: SAVE A: CLOSE</p>
                 </div>
               </div>
 
@@ -425,8 +516,18 @@
                   </div>
                   <div class="score-list" id="scoreList"></div>
                   <div class="modal-actions">
-                    <button type="button" data-close-modal>B / CLOSE</button>
+                    <button type="button" data-close-modal>A / CLOSE</button>
                   </div>
+                </div>
+              </div>
+
+              <div class="game-modal system-menu-modal" id="systemMenuModal" aria-hidden="true">
+                <div class="system-menu-panel">
+                  <h2>MENU</h2>
+                  <span class="system-menu-line"></span>
+                  <button type="button" data-system-home>HOME</button>
+                  <button type="button" data-system-leaderboard>LEADERBOARD</button>
+                  <button type="button" data-close-modal>CLOSE</button>
                 </div>
               </div>
             </div>
@@ -450,13 +551,17 @@
           </div>
 
           <div class="ab">
-            <button class="b" data-btn="X" aria-label="B">B</button>
-            <button class="a" data-btn="O" aria-label="A">A</button>
+            <button class="b" data-btn="O" aria-label="B">B</button>
+            <button class="a" data-btn="X" aria-label="A">A</button>
           </div>
         </div>
 
         <div class="system-buttons">
-          <button data-btn="MENU" aria-label="Select / Menu">
+          <button type="button" class="menu-trigger" id="systemMenuButton" aria-label="Menu">
+            <span class="menu-key">⚙</span>
+            <span class="label">MENU</span>
+          </button>
+          <button data-btn="MENU" aria-label="Select">
             <span class="pill"></span>
             <span class="label">SELECT</span>
           </button>
@@ -474,6 +579,6 @@
   </main>
 
   <script src="firebase-config.js?v=20260711-2"></script>
-  <script src="player.js?v=20260711-6"></script>
+  <script src="player.js?v=20260711-8"></script>
 </body>
 </html>

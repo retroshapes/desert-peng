@@ -8,6 +8,8 @@
   const bootLabel = bootScreen.querySelector(".startbox");
   const submitModal = document.getElementById("submitModal");
   const leaderboardModal = document.getElementById("leaderboardModal");
+  const systemMenuModal = document.getElementById("systemMenuModal");
+  const systemMenuButton = document.getElementById("systemMenuButton");
   const scoreForm = document.getElementById("scoreForm");
   const nameInput = document.getElementById("playerName");
   const submitStatus = document.getElementById("submitStatus");
@@ -25,7 +27,7 @@
 
   function writeButtons() {
     const win = frameWindow();
-    if (win && Array.isArray(win.pico8_buttons)) win.pico8_buttons[0] = buttonState;
+    if (win && win.pico8_buttons) win.pico8_buttons[0] = buttonState;
   }
 
   function setPressed(name, pressed) {
@@ -56,8 +58,10 @@
   function closeModals() {
     submitModal.classList.remove("active");
     leaderboardModal.classList.remove("active");
+    systemMenuModal.classList.remove("active");
     submitModal.setAttribute("aria-hidden", "true");
     leaderboardModal.setAttribute("aria-hidden", "true");
+    systemMenuModal.setAttribute("aria-hidden", "true");
     buttonState = 0;
     writeButtons();
   }
@@ -122,24 +126,51 @@
     ArrowLeft: "LEFT", ArrowRight: "RIGHT", ArrowUp: "UP", ArrowDown: "DOWN",
     x: "O", X: "O", c: "X", C: "X", Enter: "MENU", Escape: "X"
   };
+  const codeMap = {
+    ArrowLeft: "LEFT", ArrowRight: "RIGHT", ArrowUp: "UP", ArrowDown: "DOWN",
+    KeyX: "O", KeyC: "X", Enter: "MENU", Escape: "X"
+  };
+  const keyboardReleaseTimers = {};
 
-  window.addEventListener("keydown", function (event) {
-    const name = keyMap[event.key];
+  function mappedKey(event) {
+    return keyMap[event.key] || codeMap[event.code];
+  }
+
+  function handleKeyDown(event) {
+    const tagName = event.target && event.target.tagName;
+    if (tagName === "INPUT" || tagName === "TEXTAREA") return;
+    const name = mappedKey(event);
     if (!name) return;
     event.preventDefault();
+    clearTimeout(keyboardReleaseTimers[name]);
     if (!event.repeat) press(name);
-  });
+  }
 
-  window.addEventListener("keyup", function (event) {
-    const name = keyMap[event.key];
+  function handleKeyUp(event) {
+    const name = mappedKey(event);
     if (!name) return;
     event.preventDefault();
-    release(name);
-  });
-  window.addEventListener("blur", releaseAll);
+    clearTimeout(keyboardReleaseTimers[name]);
+    keyboardReleaseTimers[name] = setTimeout(function () {
+      release(name);
+    }, 60);
+  }
+
+  function bindKeyboard(target) {
+    try {
+      if (target.__desertPengKeyboardBound) return;
+      target.__desertPengKeyboardBound = true;
+      target.addEventListener("keydown", handleKeyDown, true);
+      target.addEventListener("keyup", handleKeyUp, true);
+      target.addEventListener("blur", releaseAll);
+    } catch (error) {}
+  }
+
+  bindKeyboard(window);
 
   function markFrameReady() {
     frameReady = true;
+    bindKeyboard(frameWindow());
     bootScreen.disabled = false;
     bootLabel.textContent = "PRESS A / START";
   }
@@ -204,7 +235,7 @@
 
   function getGpio() {
     const win = frameWindow();
-    return win && Array.isArray(win.pico8_gpio) ? win.pico8_gpio : null;
+    return win && win.pico8_gpio ? win.pico8_gpio : null;
   }
 
   function readMode(gpio) {
@@ -218,7 +249,7 @@
     document.getElementById("submitScore").textContent = String(score);
     document.getElementById("submitMode").textContent = mode.toUpperCase();
     nameInput.value = localStorage.getItem("desert_peng_name") || "";
-    submitStatus.textContent = "A: SAVE  B: CLOSE";
+    submitStatus.textContent = "B: SAVE  A: CLOSE";
     submitModal.setAttribute("aria-hidden", "false");
     submitModal.classList.add("active");
   }
@@ -262,6 +293,25 @@
     leaderboardModal.classList.add("active");
     loadLeaderboard(mode);
   }
+
+  function showSystemMenu() {
+    closeModals();
+    systemMenuModal.setAttribute("aria-hidden", "false");
+    systemMenuModal.classList.add("active");
+  }
+
+  systemMenuButton.addEventListener("pointerdown", hapticTap);
+  systemMenuButton.addEventListener("click", showSystemMenu);
+  systemMenuModal.querySelectorAll("button").forEach(function (button) {
+    button.addEventListener("pointerdown", hapticTap);
+  });
+  document.querySelector("[data-system-home]").addEventListener("click", function () {
+    window.location.reload();
+  });
+  document.querySelector("[data-system-leaderboard]").addEventListener("click", function () {
+    const gpio = getGpio();
+    showLeaderboard(gpio ? readMode(gpio) : "normal");
+  });
 
   document.querySelectorAll("[data-close-modal]").forEach(function (button) {
     button.addEventListener("click", closeModals);
