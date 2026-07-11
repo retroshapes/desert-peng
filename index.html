@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Desert Peng — Game Boy Player</title>
+  <meta name="description" content="Desert Peng im Game Boy Color-Player spielen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="player.css?v=20260711-2" />
+  <style>
+    :root {
+      --gb-shell: oklch(0.55 0.19 305);
+      --gb-shell-dark: oklch(0.38 0.16 305);
+      --gb-shell-hi: oklch(0.72 0.14 310);
+      --gb-bezel: oklch(0.22 0.04 300);
+      --gb-screen: oklch(0.86 0.08 145);
+      --gb-a: oklch(0.62 0.22 25);
+      --gb-b: oklch(0.62 0.22 25);
+      --gb-dpad: oklch(0.20 0.02 280);
+      --gb-accent: oklch(0.78 0.17 85);
+      --gb-power: oklch(0.65 0.22 25);
+      --font-display: "Press Start 2P", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: var(--font-display);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    main {
+      min-height: 100dvh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: radial-gradient(ellipse at top, oklch(0.28 0.09 300) 0%, oklch(0.12 0.04 280) 60%, oklch(0.08 0.02 270) 100%);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .device {
+      position: relative;
+      width: min(94vw, calc(94dvh * 9 / 16), 420px);
+      aspect-ratio: 9 / 16;
+      margin: auto;
+    }
+
+    .device::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 10% 10% 28% 10% / 8% 8% 18% 8%;
+      background: linear-gradient(160deg, var(--gb-shell-hi) 0%, var(--gb-shell) 45%, var(--gb-shell-dark) 100%);
+      box-shadow:
+        inset 0 4px 0 rgba(255,255,255,0.22),
+        inset 0 -6px 0 rgba(0,0,0,0.25),
+        0 30px 60px -20px rgba(0,0,0,0.7);
+    }
+
+    .content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      padding: 6% 5% 4% 5%;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 3%;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--gb-shell-dark);
+    }
+    .topbar span:last-child { color: var(--gb-shell-hi); }
+
+    .bezel-wrap {
+      margin-top: 3%;
+      margin-left: 2%;
+      margin-right: 2%;
+      position: relative;
+    }
+
+    .bezel {
+      position: relative;
+      border-radius: 16px;
+      padding: 4%;
+      background: var(--gb-bezel);
+      box-shadow:
+        inset 0 6px 12px rgba(0,0,0,0.6),
+        inset 0 -2px 4px rgba(255,255,255,0.05);
+    }
+
+    .screen {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 6px;
+      background: var(--gb-screen);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    .screen iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #000;
+    }
+
+    .boot-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #fff1e8;
+      background: #1d2b53;
+      font-family: var(--font-display);
+      border: 0;
+      cursor: pointer;
+    }
+    .boot-screen .title {
+      position: relative;
+      font-size: 14px;
+      text-shadow: 3px 3px 0 #000;
+    }
+    .boot-screen .title::after {
+      content: "";
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      bottom: -12px;
+      height: 3px;
+      background: #ffec27;
+      box-shadow: 0 4px 0 #ffa300;
+    }
+    .boot-screen .startbox {
+      margin-top: 30px;
+      color: #ffec27;
+      font-size: 8px;
+      line-height: 1.5;
+      text-shadow: 2px 2px 0 #000;
+      animation: start-pulse 900ms steps(2, end) infinite;
+    }
+    .boot-screen:disabled {
+      cursor: wait;
+    }
+    @keyframes start-pulse {
+      50% { opacity: 0.48; }
+    }
+
+    .screen-label {
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+      font-size: 7px;
+      color: var(--gb-shell-hi);
+    }
+    .screen-label span:last-child { color: var(--gb-accent); }
+
+    .controls {
+      margin-top: 4%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 4%;
+      padding: 0 3%;
+    }
+
+    .dpad {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      max-width: 160px;
+      justify-self: center;
+    }
+    .dpad .cross-h,
+    .dpad .cross-v {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--gb-dpad);
+      border-radius: 6px;
+      box-shadow: inset 0 3px 0 rgba(255,255,255,0.07), 0 5px 0 rgba(0,0,0,0.34);
+    }
+    .dpad .cross-h { width: 100%; height: 36%; }
+    .dpad .cross-v { width: 36%; height: 100%; }
+    .dpad button {
+      position: absolute;
+      background: var(--gb-dpad);
+      border: 0;
+      padding: 0;
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      line-height: 1;
+      touch-action: none;
+      cursor: pointer;
+      transition: transform 55ms ease, box-shadow 55ms ease, filter 55ms ease;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.08), inset 0 -3px 0 rgba(0,0,0,0.32);
+    }
+    .dpad button:active,
+    .dpad button.is-pressed {
+      filter: brightness(1.22);
+      box-shadow: inset 0 3px 4px rgba(0,0,0,0.48);
+    }
+    .dpad .up {
+      left: 50%; top: 0; height: 34%; width: 36%;
+      transform: translateX(-50%);
+      border-radius: 6px 6px 0 0;
+    }
+    .dpad .down {
+      left: 50%; bottom: 0; height: 34%; width: 36%;
+      transform: translateX(-50%);
+      border-radius: 0 0 6px 6px;
+      display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;
+    }
+    .dpad .left {
+      left: 0; top: 50%; height: 36%; width: 34%;
+      transform: translateY(-50%);
+      border-radius: 6px 0 0 6px;
+    }
+    .dpad .right {
+      right: 0; top: 50%; height: 36%; width: 34%;
+      transform: translateY(-50%);
+      border-radius: 0 6px 6px 0;
+    }
+    .dpad .up:active,
+    .dpad .up.is-pressed,
+    .dpad .down:active,
+    .dpad .down.is-pressed {
+      transform: translate(-50%, 3px);
+    }
+    .dpad .left:active,
+    .dpad .left.is-pressed,
+    .dpad .right:active,
+    .dpad .right.is-pressed {
+      transform: translateY(calc(-50% + 3px));
+    }
+    .dpad .dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 12px;
+      height: 12px;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+    }
+    .dpad .arrow { display: block; padding-top: 8px; text-align: center; }
+
+    .ab {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      width: 100%;
+      max-width: 160px;
+      justify-self: center;
+      transform: rotate(-20deg);
+    }
+    .ab button {
+      position: absolute;
+      width: 42%;
+      height: 42%;
+      border-radius: 999px;
+      border: 0;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 16px;
+      touch-action: none;
+      cursor: pointer;
+      transition: transform 60ms ease, box-shadow 60ms ease, filter 60ms ease;
+      box-shadow:
+        inset 0 3px 0 rgba(255,255,255,0.2),
+        inset 0 -4px 0 rgba(0,0,0,0.35),
+        0 5px 0 rgba(0,0,0,0.38),
+        0 8px 12px rgba(0,0,0,0.14);
+    }
+    .ab button:active,
+    .ab button.is-pressed {
+      filter: brightness(1.12);
+      transform: translateY(4px);
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.38), 0 1px 0 rgba(0,0,0,0.4);
+    }
+    .ab .b {
+      left: 0; bottom: 15%;
+      background: radial-gradient(circle at 30% 30%, oklch(0.75 0.2 25), var(--gb-b) 70%);
+    }
+    .ab .a {
+      right: 0; top: 15%;
+      background: radial-gradient(circle at 30% 30%, oklch(0.75 0.2 25), var(--gb-a) 70%);
+    }
+
+    .system-buttons {
+      margin-top: 3%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+    }
+    .system-buttons button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 0;
+      touch-action: none;
+      cursor: pointer;
+      font-family: var(--font-display);
+      color: var(--gb-shell-dark);
+    }
+    .system-buttons .pill {
+      display: block;
+      width: 40px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--gb-dpad);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.12), 0 3px 0 rgba(0,0,0,0.35);
+      transition: transform 55ms ease, box-shadow 55ms ease;
+    }
+    .system-buttons button:active .pill,
+    .system-buttons button.is-pressed .pill {
+      transform: translateY(3px);
+      box-shadow: inset 0 2px 3px rgba(0,0,0,0.48), 0 0 0 rgba(0,0,0,0);
+    }
+    .system-buttons span.label { font-size: 7px; }
+
+    .speaker {
+      margin-top: 3%;
+      display: flex;
+      justify-content: flex-end;
+      padding-right: 6%;
+    }
+    .speaker-grille {
+      height: 24px;
+      width: 64px;
+      transform: rotate(-20deg);
+      border-radius: 999px;
+      background: repeating-linear-gradient(90deg, var(--gb-shell-dark) 0 3px, transparent 3px 6px);
+      opacity: 0.7;
+    }
+
+    @media (max-height: 700px) {
+      .device { width: min(94vw, calc(94dvh * 9 / 16), 360px); }
+      .ab button, .dpad button { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="sr-only">Desert Peng — Game Boy Player</h1>
+
+    <div class="device">
+      <div class="content">
+        <div class="topbar">
+          <span>RETROBOY</span>
+          <span>COLOR</span>
+        </div>
+
+        <div class="bezel-wrap">
+          <div class="bezel">
+            <div class="screen" id="screen">
+              <button type="button" class="boot-screen" id="bootScreen" aria-live="polite">
+                <span class="title">Desert Peng</span>
+                <span class="startbox">LOADING CART...</span>
+              </button>
+              <iframe id="gameFrame" src="game/index.html?v=20260711-2" title="Desert Peng" allow="autoplay; fullscreen; gamepad"></iframe>
+
+              <div class="game-modal" id="submitModal" aria-hidden="true">
+                <div class="modal-card">
+                  <h2>SUBMIT SCORE</h2>
+                  <div class="modal-meta">
+                    <span id="submitMode">NORMAL</span>
+                    <span>SCORE <strong id="submitScore">0</strong></span>
+                  </div>
+                  <form id="scoreForm">
+                    <label for="playerName">YOUR NAME</label>
+                    <input id="playerName" name="playerName" maxlength="16" autocomplete="nickname" />
+                    <div class="modal-actions">
+                      <button type="button" data-close-modal>B / CLOSE</button>
+                      <button type="submit" class="primary">A / SAVE</button>
+                    </div>
+                  </form>
+                  <p class="modal-status" id="submitStatus">A: SAVE B: CLOSE</p>
+                </div>
+              </div>
+
+              <div class="game-modal" id="leaderboardModal" aria-hidden="true">
+                <div class="modal-card">
+                  <h2>LEADERBOARD</h2>
+                  <div class="leaderboard-tabs">
+                    <button type="button" data-mode="normal">NORMAL</button>
+                    <button type="button" data-mode="hardcore">HARDCORE</button>
+                  </div>
+                  <div class="score-list" id="scoreList"></div>
+                  <div class="modal-actions">
+                    <button type="button" data-close-modal>B / CLOSE</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="screen-label">
+              <span>WWW.RETROSHAPES.COM</span>
+              <span>◆</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="dpad" id="dpad">
+            <div class="cross-h"></div>
+            <div class="cross-v"></div>
+            <button class="up" data-btn="UP" aria-label="Up"><span class="arrow">▲</span></button>
+            <button class="down" data-btn="DOWN" aria-label="Down"><span class="arrow">▼</span></button>
+            <button class="left" data-btn="LEFT" aria-label="Left"><span class="arrow">◀</span></button>
+            <button class="right" data-btn="RIGHT" aria-label="Right"><span class="arrow">▶</span></button>
+            <div class="dot"></div>
+          </div>
+
+          <div class="ab">
+            <button class="b" data-btn="X" aria-label="B">B</button>
+            <button class="a" data-btn="O" aria-label="A">A</button>
+          </div>
+        </div>
+
+        <div class="system-buttons">
+          <button data-btn="MENU" aria-label="Select / Menu">
+            <span class="pill"></span>
+            <span class="label">SELECT</span>
+          </button>
+          <button data-btn="MENU" aria-label="Start">
+            <span class="pill"></span>
+            <span class="label">START</span>
+          </button>
+        </div>
+
+        <div class="speaker">
+          <div class="speaker-grille"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="firebase-config.js?v=20260711-2"></script>
+  <script src="player.js?v=20260711-6"></script>
+</body>
+</html>
