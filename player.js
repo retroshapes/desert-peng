@@ -302,11 +302,8 @@
 
   systemMenuButton.addEventListener("pointerdown", hapticTap);
   systemMenuButton.addEventListener("click", showSystemMenu);
-  systemMenuModal.querySelectorAll("button").forEach(function (button) {
+  systemMenuModal.querySelectorAll("button, a").forEach(function (button) {
     button.addEventListener("pointerdown", hapticTap);
-  });
-  document.querySelector("[data-system-home]").addEventListener("click", function () {
-    window.location.reload();
   });
   document.querySelector("[data-system-leaderboard]").addEventListener("click", function () {
     const gpio = getGpio();

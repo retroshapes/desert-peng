@@ -174,7 +174,8 @@
   box-shadow: 0 4px 0 #ffa300;
 }
 
-.system-menu-panel button {
+.system-menu-panel button,
+.system-menu-panel a {
   width: min(82%, 220px);
   min-height: 36px;
   border: 2px solid #fff1e8;
@@ -185,9 +186,13 @@
   font: 8px/1.4 var(--font-display);
   box-shadow: 3px 3px 0 #000;
   cursor: pointer;
+  display: grid;
+  place-items: center;
+  text-decoration: none;
 }
 
-.system-menu-panel button:active {
+.system-menu-panel button:active,
+.system-menu-panel a:active {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 #000;
   border-color: #ffec27;

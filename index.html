@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="player.css?v=20260711-3" />
+  <link rel="stylesheet" href="player.css?v=20260711-4" />
   <style>
     :root {
       --gb-shell: oklch(0.55 0.19 305);
@@ -430,7 +430,7 @@
         flex: 1;
         min-height: 230px;
         margin-top: 12px;
-        padding: 0 5%;
+        padding: 0 5% 68px;
         gap: 9%;
         align-items: center;
       }
@@ -440,9 +440,12 @@
         max-width: none;
       }
       .system-buttons {
+        position: absolute;
+        left: 10px;
+        bottom: max(64px, calc(env(safe-area-inset-bottom) + 48px));
         width: 74%;
         min-height: 54px;
-        margin-top: auto;
+        margin: 0;
         padding: 0 2%;
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -457,7 +460,7 @@
       .speaker {
         position: absolute;
         right: 18px;
-        bottom: max(20px, env(safe-area-inset-bottom));
+        bottom: max(68px, calc(env(safe-area-inset-bottom) + 52px));
         margin: 0;
         padding: 0;
       }
@@ -525,7 +528,7 @@
                 <div class="system-menu-panel">
                   <h2>MENU</h2>
                   <span class="system-menu-line"></span>
-                  <button type="button" data-system-home>HOME</button>
+                  <a href="https://retroshapes.com/" target="_top" data-system-home>HOME</a>
                   <button type="button" data-system-leaderboard>LEADERBOARD</button>
                   <button type="button" data-close-modal>CLOSE</button>
                 </div>
@@ -579,6 +582,6 @@
   </main>
 
   <script src="firebase-config.js?v=20260711-2"></script>
-  <script src="player.js?v=20260711-8"></script>
+  <script src="player.js?v=20260711-9"></script>
 </body>
 </html>
