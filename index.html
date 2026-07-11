@@ -202,8 +202,10 @@
       position: relative;
       aspect-ratio: 1 / 1;
       width: 100%;
-      max-width: 160px;
+      max-width: 180px;
       justify-self: center;
+      touch-action: none;
+      cursor: pointer;
     }
     .dpad .cross-h,
     .dpad .cross-v {
@@ -322,7 +324,7 @@
     }
 
     .system-buttons {
-      margin-top: 15%;
+      margin-top: 3%;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -439,10 +441,13 @@
         width: min(41vw, 190px);
         max-width: none;
       }
+      .dpad {
+        width: min(46vw, 205px);
+      }
       .system-buttons {
         position: absolute;
         left: 10px;
-        bottom: max(20px, calc(env(safe-area-inset-bottom) + 12px));
+        bottom: max(10px, calc(env(safe-area-inset-bottom) + 4px));
         width: 74%;
         min-height: 54px;
         margin: 0;
@@ -460,7 +465,7 @@
       .speaker {
         position: absolute;
         right: 18px;
-        bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
+        bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
         margin: 0;
         padding: 0;
       }
@@ -582,6 +587,6 @@
   </main>
 
   <script src="firebase-config.js?v=20260711-2"></script>
-  <script src="player.js?v=20260711-9"></script>
+  <script src="player.js?v=20260711-10"></script>
 </body>
 </html>

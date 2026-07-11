@@ -2,6 +2,7 @@
   "use strict";
 
   const BTN = { LEFT: 1, RIGHT: 2, UP: 4, DOWN: 8, O: 16, X: 32, MENU: 64 };
+  const DIRECTION_BUTTONS = ["LEFT", "RIGHT", "UP", "DOWN"];
   const GPIO = { SCORE_HIGH: 1, SCORE_LOW: 2, SUBMIT: 3, LEADERBOARD: 4, HARDCORE: 5 };
   const gameFrame = document.getElementById("gameFrame");
   const bootScreen = document.getElementById("bootScreen");
@@ -14,7 +15,10 @@
   const nameInput = document.getElementById("playerName");
   const submitStatus = document.getElementById("submitStatus");
   const scoreList = document.getElementById("scoreList");
+  const dpad = document.getElementById("dpad");
   let buttonState = 0;
+  let dpadMask = 0;
+  let dpadPointerId = null;
   let frameReady = false;
   let booted = false;
   let pendingScore = 0;
@@ -98,6 +102,8 @@
 
   function releaseAll() {
     buttonState = 0;
+    dpadMask = 0;
+    dpadPointerId = null;
     document.querySelectorAll("[data-btn].is-pressed").forEach(function (element) {
       element.classList.remove("is-pressed");
     });
@@ -119,8 +125,88 @@
   }
 
   document.querySelectorAll("[data-btn]").forEach(function (element) {
-    bindButton(element, element.dataset.btn);
+    if (!DIRECTION_BUTTONS.includes(element.dataset.btn)) {
+      bindButton(element, element.dataset.btn);
+    }
   });
+
+  function directionMaskAt(clientX, clientY) {
+    const rect = dpad.getBoundingClientRect();
+    const halfWidth = rect.width / 2;
+    const halfHeight = rect.height / 2;
+    const x = (clientX - (rect.left + halfWidth)) / halfWidth;
+    const y = (clientY - (rect.top + halfHeight)) / halfHeight;
+    const absX = Math.abs(x);
+    const absY = Math.abs(y);
+    const deadZone = 0.16;
+    const diagonalBias = 0.42;
+    let mask = 0;
+
+    if (absX < deadZone && absY < deadZone) return 0;
+    if (absX >= deadZone && absX >= absY * diagonalBias) mask |= x < 0 ? BTN.LEFT : BTN.RIGHT;
+    if (absY >= deadZone && absY >= absX * diagonalBias) mask |= y < 0 ? BTN.UP : BTN.DOWN;
+    return mask;
+  }
+
+  function applyDpadMask(nextMask) {
+    if (nextMask === dpadMask) return;
+    const previousMask = dpadMask;
+    dpadMask = nextMask;
+
+    setPressed("LEFT", Boolean(nextMask & BTN.LEFT));
+    setPressed("RIGHT", Boolean(nextMask & BTN.RIGHT));
+    setPressed("UP", Boolean(nextMask & BTN.UP));
+    setPressed("DOWN", Boolean(nextMask & BTN.DOWN));
+
+    if (nextMask && nextMask !== previousMask) hapticTap();
+    if (!booted) {
+      if (nextMask) boot();
+      return;
+    }
+
+    if (activeModal()) {
+      buttonState &= ~(BTN.LEFT | BTN.RIGHT | BTN.UP | BTN.DOWN);
+      writeButtons();
+      if ((nextMask & BTN.UP) && !(previousMask & BTN.UP)) modalPress("UP");
+      if ((nextMask & BTN.DOWN) && !(previousMask & BTN.DOWN)) modalPress("DOWN");
+      return;
+    }
+
+    buttonState = (buttonState & ~(BTN.LEFT | BTN.RIGHT | BTN.UP | BTN.DOWN)) | nextMask;
+    writeButtons();
+  }
+
+  dpad.addEventListener("pointerdown", function (event) {
+    if (dpadPointerId !== null) return;
+    event.preventDefault();
+    activateAudio();
+    dpadPointerId = event.pointerId;
+    dpad.setPointerCapture(event.pointerId);
+    applyDpadMask(directionMaskAt(event.clientX, event.clientY));
+  });
+
+  dpad.addEventListener("pointermove", function (event) {
+    if (event.pointerId !== dpadPointerId) return;
+    event.preventDefault();
+    applyDpadMask(directionMaskAt(event.clientX, event.clientY));
+  });
+
+  function releaseDpad(event) {
+    if (event.pointerId !== dpadPointerId) return;
+    event.preventDefault();
+    applyDpadMask(0);
+    dpadPointerId = null;
+  }
+
+  dpad.addEventListener("pointerup", releaseDpad);
+  dpad.addEventListener("pointercancel", releaseDpad);
+  dpad.addEventListener("lostpointercapture", function () {
+    if (dpadPointerId !== null) {
+      applyDpadMask(0);
+      dpadPointerId = null;
+    }
+  });
+  dpad.addEventListener("contextmenu", function (event) { event.preventDefault(); });
 
   const keyMap = {
     ArrowLeft: "LEFT", ArrowRight: "RIGHT", ArrowUp: "UP", ArrowDown: "DOWN",
