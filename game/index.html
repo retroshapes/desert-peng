@@ -8,7 +8,7 @@
 	// options
 
 	// fullscreen, sound, close button at top when playing on touchscreen
-	var p8_allow_mobile_menu = true;
+	var p8_allow_mobile_menu = false;
 
 	// p8_autoplay true to boot the cartridge automatically after page load when possible
 	// if the browser can not create an audio context outside of a user gesture (e.g. on iOS), p8_autoplay has no effect
@@ -620,7 +620,11 @@
 			
 			// show canvas / menu buttons only after loading
 			el = document.getElementById("p8_playarea");
-			if (el) el.style.display="table";
+			if (el) el.style.display="block";
+			["p8_menu_buttons", "p8_menu_buttons_touch", "touch_controls_background", "touch_controls_gfx"].forEach(function(id) {
+				var node = document.getElementById(id);
+				if (node) node.style.setProperty("display", "none", "important");
+			});
 
 			if (typeof(p8_update_layout_hash) !== 'undefined')
 				p8_update_layout_hash = -77;
@@ -630,7 +634,7 @@
 
 		}
 		e.type = "application/javascript";
-		e.src = "desert_peng_multicart.js?v=20260712-3";
+		e.src = "desert_peng_multicart.js?v=20260714-2";
 		e.id = "e_script";
 		
 		document.body.appendChild(e); // load and run
@@ -1003,6 +1007,22 @@ canvas{
 -->
 </STYLE>
 
+<style>
+html,body,#body_0,#p8_frame_0,#p8_frame,#p8_container,#p8_playarea{
+  width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+  margin:0!important;padding:0!important;overflow:hidden!important;background:#000!important;
+}
+#p8_frame,#p8_playarea,#p8_container{display:block!important;}
+#p8_canvas_row{display:block!important;width:100%!important;height:100%!important;}
+#p8_start_button,.p8_controller_area,#p8_menu_buttons,#p8_menu_buttons_touch,
+#touch_controls_background,#touch_controls_gfx{display:none!important;}
+#canvas{
+  display:block!important;width:100%!important;height:100%!important;
+  margin:0!important;border:0!important;cursor:default!important;
+  image-rendering:pixelated!important;touch-action:none!important;
+}
+</style>
+
 </head>
 
 <body style="padding:0px; margin:0px; background-color:#222; color:#ccc">
@@ -1040,7 +1060,7 @@ canvas{
 				&nbsp
 			</div>
 
-			<div style="display:flex; position:relative">
+			<div id="p8_canvas_row" style="display:flex; position:relative">
 				<!-- pointer-events turned off for mobile in p8_update_layout because need for desktop mouse -->
 				<canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault();" >
 				</canvas>
@@ -1117,6 +1137,23 @@ canvas{
 
 
 <!-- Add content below the cart here -->
+
+<script type="text/javascript">
+(function signal_desert_peng_ready() {
+	var sent = false;
+	function check_ready() {
+		if (!sent && window.Module && Module.calledRun && window.p8_is_running) {
+			sent = true;
+			setTimeout(function () {
+				window.parent.postMessage("desert-peng-ready", window.location.origin);
+			}, 700);
+			return;
+		}
+		requestAnimationFrame(check_ready);
+	}
+	check_ready();
+})();
+</script>
 
 
 
