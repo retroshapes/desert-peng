@@ -588,11 +588,11 @@
     .controls {
       margin-top: 5.2%;
       grid-template-columns: 1fr 1fr;
-      gap: 18%;
-      padding: 0 12%;
+      gap: 14%;
+      padding: 0 9%;
     }
     .dpad {
-      max-width: 122px;
+      max-width: 136px;
       filter: drop-shadow(0 6px 2px rgba(33,7,49,0.28));
     }
     .dpad .cross-h,
@@ -612,7 +612,7 @@
       box-shadow: inset 2px 2px 4px rgba(0,0,0,0.6), 1px 1px 0 rgba(255,255,255,0.06);
     }
     .ab {
-      max-width: 112px;
+      max-width: 126px;
     }
     .ab button {
       border: 2px solid color-mix(in oklch, var(--gb-a) 52%, #2a0617);
@@ -650,8 +650,8 @@
 
     @media (max-height: 700px) and (min-width: 601px) {
       .device { width: min(90vw, calc(90dvh * 2 / 3), 420px); }
-      .dpad { max-width: 108px; }
-      .ab { max-width: 100px; }
+      .dpad { max-width: 118px; }
+      .ab { max-width: 108px; }
       .controls { margin-top: 3.5%; }
     }
 
@@ -687,18 +687,23 @@
       }
       .controls {
         flex: 1;
-        min-height: 210px;
+        width: calc(100% + 18px);
+        min-height: 230px;
         margin-top: clamp(12px, 2.4dvh, 20px);
-        padding: 0 9% max(76px, calc(env(safe-area-inset-bottom) + 62px));
-        gap: 13%;
+        margin-left: -12px;
+        grid-template-columns: 1.08fr .92fr;
+        padding: 0 1% max(76px, calc(env(safe-area-inset-bottom) + 62px));
+        gap: 4%;
       }
       .dpad {
-        width: min(42vw, 174px);
+        width: min(46vw, 184px);
         max-width: none;
+        justify-self: start;
       }
       .ab {
-        width: min(36vw, 150px);
+        width: min(40vw, 160px);
         max-width: none;
+        justify-self: end;
       }
       .system-buttons {
         bottom: max(14px, calc(env(safe-area-inset-bottom) + 8px));
@@ -716,11 +721,11 @@
     <div class="device">
       <div class="content">
         <div class="topbar">
-          <span>RETROBOY</span>
           <a class="shell-brand" href="https://retroshapes.com/" target="_blank" rel="noopener" aria-label="Retroshapes.com in neuem Tab öffnen">
             <span class="shell-brand__bars" aria-hidden="true"><i></i><i></i><i></i></span>
             <span class="shell-brand__text">RETROSHAPES</span>
           </a>
+          <span>RETROBOY</span>
         </div>
 
         <div class="bezel-wrap">
